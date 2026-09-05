@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">JARVIS</string>
+    <string name="nav_face">Face</string>
+    <string name="nav_talk">Talk</string>
+    <string name="nav_chat">Chat</string>
+    <string name="nav_memory">Memory</string>
+    <string name="face_open">Open face</string>
+    <string name="home_greeting">All systems online, sir.</string>
+    <string name="home_sub">What are we working on today?</string>
+    <string name="talk_hint">Hold the button and speak</string>
+    <string name="talk_listening">Listening…</string>
+    <string name="talk_thinking">Thinking…</string>
+    <string name="chat_hint">Type a message…</string>
+    <string name="chat_empty">No turns yet. Say hello.</string>
+    <string name="memory_title">Memory vault</string>
+    <string name="memory_empty">Nothing stored yet.</string>
+    <string name="memory_add">Remember this…</string>
+    <string name="memory_search">Search memories…</string>
+</resources>

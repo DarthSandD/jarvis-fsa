@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="fsa_bg">#020705</color>
+    <color name="fsa_surface">#04100A</color>
+    <color name="fsa_card">#071711</color>
+    <color name="fsa_chrome">#1C2F26</color>
+    <color name="fsa_ink">#E8F0F2</color>
+    <color name="fsa_dim">#5A6A72</color>
+    <color name="fsa_green">#3DDC84</color>
+    <color name="fsa_amber">#E7C368</color>
+    <color name="fsa_icon_bg">#0A0D13</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="colorPrimary">#3DDC84</color>
+    <color name="colorPrimaryDark">#020705</color>
+    <color name="colorAccent">#3DDC84</color>
+</resources>

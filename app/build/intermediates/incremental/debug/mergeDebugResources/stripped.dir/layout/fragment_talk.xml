@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/fsa_bg"
+    android:gravity="center"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/txt_talk_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="idle"
+        android:textColor="@color/fsa_ink"
+        android:textSize="20sp"
+        android:letterSpacing="0.3"
+        android:fontFamily="monospace" />
+
+    <TextView
+        android:id="@+id/txt_talk_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/talk_hint"
+        android:textColor="@color/fsa_dim"
+        android:textSize="12sp"
+        android:fontFamily="monospace" />
+
+    <Button
+        android:id="@+id/btn_ptt"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="@color/fsa_green"
+        android:text="HOLD"
+        android:textSize="22sp"
+        android:fontFamily="monospace" />
+
+    <TextView
+        android:id="@+id/txt_talk_log"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:textColor="@color/fsa_dim"
+        android:textSize="12sp"
+        android:fontFamily="monospace"
+        android:maxLines="6"
+        android:ellipsize="end" />
+</LinearLayout>

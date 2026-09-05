@@ -1,0 +1,34 @@
+[
+    {
+        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/fragment_chat.xml",
+        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_chat.xml"
+    },
+    {
+        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/fragment_talk.xml",
+        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_talk.xml"
+    },
+    {
+        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/fragment_memory.xml",
+        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_memory.xml"
+    },
+    {
+        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/fragment_home.xml",
+        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_home.xml"
+    },
+    {
+        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/item_chat.xml",
+        "source": "com.darrenai.jarvis.app-main-51:/layout/item_chat.xml"
+    },
+    {
+        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/item_memory.xml",
+        "source": "com.darrenai.jarvis.app-main-51:/layout/item_memory.xml"
+    },
+    {
+        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/activity_main.xml",
+        "source": "com.darrenai.jarvis.app-main-51:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/activity_settings.xml",
+        "source": "com.darrenai.jarvis.app-main-51:/layout/activity_settings.xml"
+    }
+]

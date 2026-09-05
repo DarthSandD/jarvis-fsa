@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.JarvisFSA" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowBackground">@color/fsa_bg</item>
+        <item name="android:statusBarColor">@color/fsa_bg</item>
+        <item name="android:navigationBarColor">@color/fsa_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="colorPrimary">@color/fsa_green</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSecondary">@color/fsa_amber</item>
+        <item name="colorSurface">@color/fsa_surface</item>
+        <item name="colorOnSurface">@color/fsa_ink</item>
+        <item name="android:colorBackground">@color/fsa_bg</item>
+    </style>
+</resources>
