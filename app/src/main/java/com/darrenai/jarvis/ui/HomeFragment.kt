@@ -8,8 +8,11 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.darrenai.jarvis.DeviceActions
 import com.darrenai.jarvis.JarvisRouter
+import com.darrenai.jarvis.MemoryVault
 import com.darrenai.jarvis.OmniClient
+import com.darrenai.jarvis.VoiceEngine
 import com.darrenai.jarvis.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -64,6 +67,54 @@ class HomeFragment : Fragment() {
                         if (online > 0) R.color.fsa_green else R.color.fsa_amber, null
                     )
                 )
+            }
+            maybeBrief(view, base, prefs.getString("api_key", "") ?: "")
+        }
+    }
+
+    /**
+     * Morning briefing: once per day, 5-10am, Jarvis speaks first.
+     * Greeting, device snapshot, unread reminders from the vault.
+     */
+    private fun maybeBrief(view: View, base: String, apiKey: String) {
+        val cal = java.util.Calendar.getInstance()
+        if (cal.get(java.util.Calendar.HOUR_OF_DAY) !in 5..10) return
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+            .format(cal.time)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        if (prefs.getString("last_briefing", "") == today) return
+
+        val vault = MemoryVault(java.io.File(requireContext().filesDir, "vault"))
+        val reminders = vault.search("reminder").take(3)
+            .joinToString("\n") { "- ${it.name}: ${it.preview}" }
+        val device = DeviceActions.snapshot(requireContext())
+        val prompt = buildString {
+            append("Morning briefing for Darren. Keep it to 3 short spoken sentences. ")
+            append(device)
+            if (reminders.isNotBlank()) append("\nOpen reminders:\n$reminders")
+        }
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val full = StringBuilder()
+            JarvisRouter(primaryBaseUrl = base, apiKey = apiKey).chatStream(
+                messages = listOf("user" to prompt),
+                systemExtra = "This is the once-daily morning briefing. Greet Darren as sir, " +
+                    "state readiness, mention reminders if any. Plain spoken sentences only.",
+                onDelta = { full.append(it) },
+                onDone = { full.clear().append(it) },
+                onError = { full.append("Systems nominal, sir. All backends standing by.") }
+            )
+            withContext(Dispatchers.Main) {
+                if (!isAdded) return@withContext
+                prefs.edit().putString("last_briefing", today).apply()
+                val card = view.findViewById<View>(R.id.card_briefing)
+                val txt = view.findViewById<TextView>(R.id.txt_briefing)
+                card?.visibility = View.VISIBLE
+                txt?.text = full.toString()
+                vault.saveNote("briefing", full.toString())
+                if (prefs.getBoolean("tts_enabled", true)) {
+                    VoiceEngine.get(requireContext()).applyProsody()
+                    VoiceEngine.get(requireContext()).speak(full.toString())
+                }
             }
         }
     }

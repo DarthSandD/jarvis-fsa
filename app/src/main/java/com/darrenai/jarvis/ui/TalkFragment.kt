@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.darrenai.jarvis.DeviceActions
 import com.darrenai.jarvis.JarvisRouter
 import com.darrenai.jarvis.MemoryVault
 import com.darrenai.jarvis.OmniClient
@@ -156,8 +157,24 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
         runCatching { SignalBus.setState(SignalBus.THINKING) }
         log("you: $text")
         vault.appendTurn("user", text)
+
+        // Local device commands resolve instantly — Jarvis acts, not just chats.
+        val local = DeviceActions.parseCommand(text)
+        if (local != null) {
+            val answer = DeviceActions.execute(requireContext(), local, vault)
+            history.add("user" to text)
+            history.add("assistant" to answer)
+            vault.appendTurn("jarvis", answer)
+            log("jarvis [device]: ${answer.take(120)}")
+            setStateLabel("speaking")
+            if (ttsOn()) engine.speak(answer) { nextTurn() } else nextTurn()
+            return
+        }
+
         history.add("user" to text)
-        val memory = vault.recall(text)
+        val device = DeviceActions.snapshot(requireContext())
+        val memory = listOf(vault.recall(text), device).filter { it.isNotBlank() }
+            .joinToString("\n")
 
         streamJob?.cancel()
         streamBuffer = StringBuilder()

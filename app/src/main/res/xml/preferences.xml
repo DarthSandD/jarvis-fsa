@@ -25,5 +25,19 @@
             app:key="tts_enabled"
             app:title="Spoken replies"
             app:defaultValue="true" />
+        <ListPreference
+            app:key="voice_pitch"
+            app:title="Voice depth"
+            app:entries="@array/voice_pitch_labels"
+            app:entryValues="@array/voice_pitch_values"
+            app:defaultValue="0.85"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            app:key="voice_rate"
+            app:title="Speaking speed"
+            app:entries="@array/voice_rate_labels"
+            app:entryValues="@array/voice_rate_values"
+            app:defaultValue="0.95"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 </PreferenceScreen>

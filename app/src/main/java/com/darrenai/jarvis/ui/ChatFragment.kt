@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.darrenai.jarvis.DeviceActions
 import com.darrenai.jarvis.JarvisRouter
 import com.darrenai.jarvis.MemoryVault
 import com.darrenai.jarvis.OmniClient
@@ -72,8 +73,23 @@ class ChatFragment : Fragment() {
         scroll(view)
         vault.appendTurn("user", text)
 
+        // Local device commands bypass the LLM — instant action.
+        val local = DeviceActions.parseCommand(text)
+        if (local != null) {
+            val answer = DeviceActions.execute(requireContext(), local, vault)
+            messages.add(Msg(answer, false))
+            runCatching { adapter.notifyItemInserted(messages.size - 1) }
+            updateEmpty(view)
+            scroll(view)
+            vault.appendTurn("jarvis", answer)
+            view.findViewById<TextView>(R.id.txt_chat_model)?.text = "device · local"
+            if (ttsOn()) VoiceEngine.get(requireContext()).speak(answer)
+            return
+        }
+
         val history = messages.map { (if (it.isUser) "user" else "assistant") to it.text }
-        val memory = vault.recall(text)
+        val memory = listOf(vault.recall(text), DeviceActions.snapshot(requireContext()))
+            .filter { it.isNotBlank() }.joinToString("\n")
         // Placeholder bubble fills in live as the stream arrives.
         messages.add(Msg("…", false))
         val aiIdx = messages.size - 1

@@ -36,6 +36,7 @@ class VoiceEngine private constructor(private val appContext: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val main = Handler(Looper.getMainLooper())
     private var tts: TextToSpeech? = null
+
     private var ttsReady = false
     private var recognizer: SpeechRecognizer? = null
     private var callback: TurnCallback? = null
@@ -70,6 +71,51 @@ class VoiceEngine private constructor(private val appContext: Context) {
                 instance ?: VoiceEngine(context.applicationContext).also { instance = it }
             }
         }
+
+        /**
+         * Turns LLM markdown output into plain speakable sentences.
+         * The single biggest "robotic voice" fix: raw markdown makes TTS
+         * read asterisks, hashes and emoji aloud.
+         */
+        fun sanitizeForSpeech(raw: String): String {
+            var s = raw
+            // Strip code fences and inline code, keep the words
+            s = s.replace(Regex("```[\\s\\S]*?```"), " ")
+            s = s.replace("`", "")
+            // Images/links -> link text only
+            s = s.replace(Regex("!\\[([^\\]]*)]\\([^)]*\\)"), "$1")
+            s = s.replace(Regex("\\[([^\\]]+)]\\(([^)]*)\\)"), "$1")
+            // Bold/italic/strike markers
+            s = s.replace(Regex("\\*\\*(.*?)\\*\\*"), "$1")
+            s = s.replace(Regex("__(.*?)__"), "$1")
+            s = s.replace(Regex("(?<!\\w)\\*(?!\\s)(.+?)(?<!\\s)\\*(?!\\w)"), "$1")
+            s = s.replace(Regex("(?<!\\w)_(?!\\s)(.+?)(?<!\\s)_(?!\\w)"), "$1")
+            s = s.replace("~~", "")
+            // Headings -> sentence pause
+            s = s.replace(Regex("(?m)^#{1,6}\\s*"), "")
+            // Bullets/numbered lists -> sentence breaks
+            s = s.replace(Regex("(?m)^\\s*[-*•]\\s+"), "")
+            s = s.replace(Regex("(?m)^\\s*\\d+[.)]\\s+"), "")
+            // Blockquotes, tables, rules
+            s = s.replace(Regex("(?m)^\\s*>\\s?"), "")
+            s = s.replace("|", " ")
+            s = s.replace(Regex("(?m)^[\\s:|-]+\$"), " ")
+            // Raw URLs / bare domains
+            s = s.replace(Regex("https?://\\S+"), "")
+            s = s.replace(Regex("\\b[\\w-]+\\.(com|net|org|io|ai|id)\\b\\S*"), "")
+            // Emoji and misc symbols TTS mangles
+            s = s.replace(Regex("[\\p{So}\\p{Sk}\\u2600-\\u27BF\\uFE0F]"), "")
+            s = s.replace("&", " and ")
+            s = s.replace(Regex("\\s*/\\s*"), ", ")
+            // Collapse leftovers into clean sentence flow
+            s = s.replace(Regex("[ \\t\\x0B\\f\\r]+"), " ")
+            s = s.replace(Regex("\\n{2,}"), ". ")
+            s = s.replace("\n", ", ")
+            s = s.replace(Regex("\\s+([.,;:!?])"), "$1")
+            s = s.replace(Regex("([.,;:!?]){2,}"), "$1")
+            s = s.replace(Regex("\\s+"), " ").trim()
+            return s
+        }
     }
 
     init {
@@ -77,7 +123,8 @@ class VoiceEngine private constructor(private val appContext: Context) {
             tts = TextToSpeech(appContext) { status ->
                 if (status == TextToSpeech.SUCCESS) {
                     tts?.language = Locale.US
-                    tts?.setSpeechRate(0.95f)
+                    pickBestVoice()
+                    applyProsody()
                     tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                         override fun onStart(id: String?) {}
                         override fun onError(id: String?) { finishSpeaking() }
@@ -87,6 +134,42 @@ class VoiceEngine private constructor(private val appContext: Context) {
                 }
             }
         }
+    }
+
+    /** Prefer a masculine English voice — closest to Jarvis on stock Android. */
+    private fun pickBestVoice() {
+        val engine = tts ?: return
+        val voices = try { engine.voices?.toList() ?: emptyList() } catch (e: Exception) { return }
+        if (voices.isEmpty()) return
+        fun score(v: android.speech.tts.Voice): Int {
+            val locale = v.locale ?: return -100
+            if (locale.language != "en") return -100
+            if (v.isNetworkConnectionRequired) return -50
+            val n = v.name.lowercase()
+            var s = 0
+            if (locale.country.equals("GB", true)) s += 2
+            if (listOf("male", "man", "daniel", "george", "david", "james", "brian")
+                    .any { it in n }) s += 3
+            runCatching { if (v.quality >= 400) s += 1 }
+            runCatching { if (!v.isNetworkConnectionRequired) s += 1 }
+            return s
+        }
+        val best = voices.maxByOrNull { score(it) } ?: return
+        if (score(best) < 0) return
+        try { engine.voice = best } catch (e: Exception) { }
+    }
+
+    /** Pitch/rate from Settings (voice_pitch, voice_rate as decimal strings). */
+    fun applyProsody() {
+        val prefs = try {
+            androidx.preference.PreferenceManager.getDefaultSharedPreferences(appContext)
+        } catch (e: Exception) { return }
+        val rate = prefs.getString("voice_rate", "0.95")?.toFloatOrNull() ?: 0.95f
+        val pitch = prefs.getString("voice_pitch", "0.85")?.toFloatOrNull() ?: 0.85f
+        try {
+            tts?.setSpeechRate(rate.coerceIn(0.5f, 1.5f))
+            tts?.setPitch(pitch.coerceIn(0.5f, 1.5f))
+        } catch (e: Exception) { }
     }
 
     fun isRecognitionAvailable(): Boolean = runCatching {
@@ -189,7 +272,8 @@ class VoiceEngine private constructor(private val appContext: Context) {
     /** Speak a completed reply; drives the bus while audio plays. */
     fun speak(text: String, onDone: () -> Unit = {}) {
         runOnMain {
-            if (text.isBlank()) {
+            val clean = sanitizeForSpeech(text)
+            if (clean.isBlank()) {
                 onDone()
                 return@runOnMain
             }
@@ -211,7 +295,7 @@ class VoiceEngine private constructor(private val appContext: Context) {
                 }
             }
             try {
-                tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
+                tts?.speak(clean, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
             } catch (e: Exception) {
                 finishSpeaking()
             }
@@ -228,7 +312,8 @@ class VoiceEngine private constructor(private val appContext: Context) {
 
     fun speakSentence(sentence: String) {
         runOnMain {
-            if (sentence.isBlank() || !ttsReady || tts == null) return@runOnMain
+            val clean = sanitizeForSpeech(sentence)
+            if (clean.isBlank() || !ttsReady || tts == null) return@runOnMain
             if (!speaking) {
                 speaking = true
                 runCatching { SignalBus.setState(SignalBus.SPEAKING) }
@@ -237,7 +322,7 @@ class VoiceEngine private constructor(private val appContext: Context) {
             }
             streamPending++
             try {
-                tts?.speak(sentence, TextToSpeech.QUEUE_ADD, null, UUID.randomUUID().toString())
+                tts?.speak(clean, TextToSpeech.QUEUE_ADD, null, UUID.randomUUID().toString())
             } catch (e: Exception) {
                 streamPending = maxOf(0, streamPending - 1)
             }
