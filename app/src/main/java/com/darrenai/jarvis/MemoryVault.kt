@@ -116,6 +116,38 @@ class MemoryVault(private val root: File) {
         }
     }
 
+    /**
+     * Recall top relevant notes for a query (keyword overlap score).
+     * Injected into the agent prompt so it remembers across turns.
+     */
+    fun recall(query: String, limit: Int = 3, maxChars: Int = 1500): String {
+        val words = query.lowercase().split(Regex("[^a-z0-9]+"))
+            .filter { it.length > 2 }.toSet()
+        if (words.isEmpty()) return ""
+        data class Scored(val doc: Doc, val score: Int)
+        val scored = listDocs().mapNotNull { d ->
+            if (d.name.startsWith("daily/")) {
+                // Daily logs are noisy — only exact-ish hits count.
+                val hits = words.count {
+                    d.preview.lowercase().contains(it)
+                }
+                if (hits >= 2) Scored(d, hits) else null
+            } else {
+                val hay = (d.name + " " + d.preview).lowercase()
+                val hits = words.count { hay.contains(it) }
+                if (hits > 0) Scored(d, hits * 2) else null
+            }
+        }.sortedByDescending { it.score }.take(limit)
+        val out = StringBuilder()
+        for ((doc, _) in scored) {
+            val body = readDoc(doc.name).take(600)
+            if (body.isBlank()) continue
+            if (out.length + body.length > maxChars) break
+            out.append("### ").append(doc.name).append("\n").append(body).append("\n")
+        }
+        return out.toString().trim()
+    }
+
     companion object {
         const val SEED_INDEX = """# VAULT-INDEX
 

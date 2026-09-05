@@ -63,6 +63,43 @@ Always identify yourself as JARVIS."""
                 null
             }
         }
+
+        /** Parse one SSE chunk line. Returns content piece, or null if keep-alive/control. */
+        fun parseChunk(line: String): String? {
+            val t = line.trim()
+            if (!t.startsWith("data:")) return null
+            val payload = t.removePrefix("data:").trim()
+            if (payload.isEmpty() || payload == "[DONE]") return null
+            return try {
+                val root = JSONObject(payload)
+                val choices = root.optJSONArray("choices") ?: return null
+                if (choices.length() == 0) return null
+                val delta = choices.getJSONObject(0).optJSONObject("delta") ?: return null
+                delta.optString("content", null)?.takeIf { it.isNotEmpty() }
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        /**
+         * Split complete sentences off a streaming buffer.
+         * Returns (complete sentences, remainder). A sentence ends with
+         * . ! ? followed by whitespace/end, and must be at least 12 chars
+         * so abbreviations don't trigger early speech.
+         */
+        fun splitSentences(buffer: String): Pair<List<String>, String> {
+            val done = mutableListOf<String>()
+            var rest = buffer
+            val re = Regex("""(.+?[.!?])(\s+|$)""")
+            while (true) {
+                val m = re.find(rest) ?: break
+                val sentence = m.groupValues[1].trim()
+                if (sentence.length < 12) break
+                done.add(sentence)
+                rest = rest.substring(m.range.last + 1)
+            }
+            return done to rest
+        }
     }
 
     sealed class Result {
@@ -96,6 +133,77 @@ Always identify yourself as JARVIS."""
                 else Result.Err("Malformed response from server")
             } catch (e: Exception) {
                 Result.Err(e.message ?: e.javaClass.simpleName)
+            }
+        }
+    }
+
+    /**
+     * Streaming chat (SSE). Calls onDelta for each content piece as it
+     * arrives, then onDone(fullText) or onError. Callbacks run on IO —
+     * callers marshal to main. Cancel the surrounding coroutine to stop.
+     */
+    suspend fun chatStream(
+        messages: List<Pair<String, String>>,
+        maxTokens: Int = 1024,
+        systemExtra: String = "",
+        onDelta: suspend (String) -> Unit,
+        onDone: suspend (String) -> Unit,
+        onError: suspend (String) -> Unit
+    ) {
+        withContext(Dispatchers.IO) {
+            val system = if (systemExtra.isBlank()) JARVIS_SYSTEM
+            else "$JARVIS_SYSTEM\n\nRelevant memory:\n$systemExtra"
+            try {
+                val conn = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 30000
+                    readTimeout = 120000
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("Accept", "text/event-stream")
+                    if (apiKey.isNotEmpty()) setRequestProperty("Authorization", "Bearer $apiKey")
+                    doOutput = true
+                }
+                val body = buildBody(model, system, messages, maxTokens)
+                    .replace("\"stream\":false", "\"stream\":true")
+                conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+                val code = conn.responseCode
+                if (code !in 200..299) {
+                    val err = try {
+                        conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown"
+                    } catch (e: Exception) { "Unknown" }
+                    onError("Server $code: ${err.take(200)}")
+                    return@withContext
+                }
+                val full = StringBuilder()
+                var finished = false
+                conn.inputStream.bufferedReader().useLines { lines ->
+                    lines.forEach { line ->
+                        val piece = parseChunk(line)
+                        if (piece != null) {
+                            full.append(piece)
+                            onDelta(piece)
+                        }
+                        if (line.contains("\"finish_reason\":\"stop\"") ||
+                            line.contains("\"finish_reason\": \"stop\"") ||
+                            line.trim() == "data: [DONE]"
+                        ) {
+                            finished = true
+                        }
+                    }
+                }
+                val text = full.toString()
+                if (text.isNotEmpty()) onDone(text)
+                else onError("Empty response from server")
+            } catch (e: Exception) {
+                // Fall back to non-streaming once before giving up.
+                try {
+                    when (val r = chat(messages, maxTokens)) {
+                        is Result.Ok -> onDone(r.text)
+                        is Result.Err -> onError(r.message)
+                    }
+                } catch (e2: Exception) {
+                    onError(e.message ?: e.javaClass.simpleName)
+                }
             }
         }
     }

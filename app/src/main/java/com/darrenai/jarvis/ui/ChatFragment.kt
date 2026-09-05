@@ -72,25 +72,46 @@ class ChatFragment : Fragment() {
         vault.appendTurn("user", text)
 
         val history = messages.map { (if (it.isUser) "user" else "assistant") to it.text }
+        val memory = vault.recall(text)
+        // Placeholder bubble fills in live as the stream arrives.
+        messages.add(Msg("…", false))
+        val aiIdx = messages.size - 1
+        runCatching { adapter.notifyItemInserted(aiIdx) }
+        scroll(view)
+        val shown = StringBuilder()
+
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val res = client().chat(history)
-            withContext(Dispatchers.Main) {
-                if (!isAdded) return@withContext
-                when (res) {
-                    is OmniClient.Result.Ok -> {
-                        messages.add(Msg(res.text, false))
-                        runCatching { adapter.notifyItemInserted(messages.size - 1) }
-                        vault.appendTurn("jarvis", res.text)
-                        if (ttsOn()) VoiceEngine.get(requireContext()).speak(res.text)
+            client().chatStream(
+                messages = history,
+                systemExtra = memory,
+                onDelta = { piece ->
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded) return@withContext
+                        shown.append(piece)
+                        messages[aiIdx] = Msg(shown.toString(), false, messages[aiIdx].ts)
+                        runCatching { adapter.notifyItemChanged(aiIdx) }
+                        scroll(view)
                     }
-                    is OmniClient.Result.Err -> {
-                        messages.add(Msg("⚠️ ${res.message}", false))
-                        runCatching { adapter.notifyItemInserted(messages.size - 1) }
+                },
+                onDone = { full ->
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded) return@withContext
+                        messages[aiIdx] = Msg(full, false, messages[aiIdx].ts)
+                        runCatching { adapter.notifyItemChanged(aiIdx) }
+                        vault.appendTurn("jarvis", full)
+                        if (ttsOn()) VoiceEngine.get(requireContext()).speak(full)
+                        scroll(view)
+                    }
+                },
+                onError = { err ->
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded) return@withContext
+                        messages[aiIdx] = Msg("⚠️ $err", false, messages[aiIdx].ts)
+                        runCatching { adapter.notifyItemChanged(aiIdx) }
+                        scroll(view)
                     }
                 }
-                updateEmpty(view)
-                scroll(view)
-            }
+            )
         }
     }
 

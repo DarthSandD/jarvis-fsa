@@ -22,6 +22,7 @@ dimen text_title
 drawable ic_launcher_foreground
 id bottom_nav
 id btn_add_memory
+id btn_handsfree
 id btn_hold_talk
 id btn_open_face
 id btn_ptt

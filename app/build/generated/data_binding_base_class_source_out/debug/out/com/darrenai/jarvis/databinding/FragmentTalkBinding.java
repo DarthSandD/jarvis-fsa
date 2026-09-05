@@ -21,6 +21,9 @@ public final class FragmentTalkBinding implements ViewBinding {
   private final LinearLayout rootView;
 
   @NonNull
+  public final Button btnHandsfree;
+
+  @NonNull
   public final Button btnPtt;
 
   @NonNull
@@ -32,9 +35,11 @@ public final class FragmentTalkBinding implements ViewBinding {
   @NonNull
   public final TextView txtTalkState;
 
-  private FragmentTalkBinding(@NonNull LinearLayout rootView, @NonNull Button btnPtt,
-      @NonNull TextView txtTalkHint, @NonNull TextView txtTalkLog, @NonNull TextView txtTalkState) {
+  private FragmentTalkBinding(@NonNull LinearLayout rootView, @NonNull Button btnHandsfree,
+      @NonNull Button btnPtt, @NonNull TextView txtTalkHint, @NonNull TextView txtTalkLog,
+      @NonNull TextView txtTalkState) {
     this.rootView = rootView;
+    this.btnHandsfree = btnHandsfree;
     this.btnPtt = btnPtt;
     this.txtTalkHint = txtTalkHint;
     this.txtTalkLog = txtTalkLog;
@@ -68,6 +73,12 @@ public final class FragmentTalkBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btn_handsfree;
+      Button btnHandsfree = ViewBindings.findChildViewById(rootView, id);
+      if (btnHandsfree == null) {
+        break missingId;
+      }
+
       id = R.id.btn_ptt;
       Button btnPtt = ViewBindings.findChildViewById(rootView, id);
       if (btnPtt == null) {
@@ -92,8 +103,8 @@ public final class FragmentTalkBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentTalkBinding((LinearLayout) rootView, btnPtt, txtTalkHint, txtTalkLog,
-          txtTalkState);
+      return new FragmentTalkBinding((LinearLayout) rootView, btnHandsfree, btnPtt, txtTalkHint,
+          txtTalkLog, txtTalkState);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

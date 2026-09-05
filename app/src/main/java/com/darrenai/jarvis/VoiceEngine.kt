@@ -218,6 +218,64 @@ class VoiceEngine private constructor(private val appContext: Context) {
         }
     }
 
+    /**
+     * Enqueue one streamed sentence for immediate speech (QUEUE_ADD).
+     * Call as sentences complete during streaming; call [finishStream]
+     * with the tail remainder when the stream ends. First audio plays
+     * ~1-2s into generation instead of waiting for the full reply.
+     */
+    private var streamPending = 0
+
+    fun speakSentence(sentence: String) {
+        runOnMain {
+            if (sentence.isBlank() || !ttsReady || tts == null) return@runOnMain
+            if (!speaking) {
+                speaking = true
+                runCatching { SignalBus.setState(SignalBus.SPEAKING) }
+                waveTicks = 0
+                main.post(waveRunner)
+            }
+            streamPending++
+            try {
+                tts?.speak(sentence, TextToSpeech.QUEUE_ADD, null, UUID.randomUUID().toString())
+            } catch (e: Exception) {
+                streamPending = maxOf(0, streamPending - 1)
+            }
+        }
+    }
+
+    fun finishStream(tail: String, onDone: () -> Unit = {}) {
+        runOnMain {
+            if (tail.isNotBlank() && ttsReady && tts != null) {
+                streamPending++
+                try {
+                    tts?.speak(tail, TextToSpeech.QUEUE_ADD, null, UUID.randomUUID().toString())
+                } catch (e: Exception) {
+                    streamPending = maxOf(0, streamPending - 1)
+                }
+            }
+            pendingDone = onDone
+            scope.launch {
+                // Wait for the queue to drain: poll speaking state via TTS.
+                var waited = 0
+                while (speaking && waited < 60000) {
+                    kotlinx.coroutines.delay(500)
+                    waited += 500
+                    try {
+                        if (tts?.isSpeaking == false) {
+                            // Give callbacks a beat, then close out.
+                            kotlinx.coroutines.delay(800)
+                            if (tts?.isSpeaking == false) break
+                        }
+                    } catch (e: Exception) {
+                        break
+                    }
+                }
+                finishSpeaking()
+            }
+        }
+    }
+
     private fun finishSpeaking() {
         main.post {
             speaking = false

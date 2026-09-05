@@ -3308,6 +3308,7 @@ id bounceBoth
 id bounceEnd
 id bounceStart
 id btn_add_memory
+id btn_handsfree
 id btn_hold_talk
 id btn_open_face
 id btn_ptt

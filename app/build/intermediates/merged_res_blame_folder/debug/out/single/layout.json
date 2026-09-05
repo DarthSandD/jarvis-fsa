@@ -1,34 +1,38 @@
 [
     {
-        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/fragment_chat.xml",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_chat.xml"
-    },
-    {
         "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/fragment_talk.xml",
         "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_talk.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/fragment_memory.xml",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_memory.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-mergeDebugResources-48:\\layout\\fragment_chat.xml",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\fragment_chat.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/fragment_home.xml",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_home.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-mergeDebugResources-48:\\layout\\fragment_talk.xml",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\fragment_talk.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/item_chat.xml",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/item_chat.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-mergeDebugResources-48:\\layout\\activity_settings.xml",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\activity_settings.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/item_memory.xml",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/item_memory.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-mergeDebugResources-48:\\layout\\item_chat.xml",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\item_chat.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/activity_main.xml",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/activity_main.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-mergeDebugResources-48:\\layout\\item_memory.xml",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\item_memory.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-mergeDebugResources-48:/layout/activity_settings.xml",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/activity_settings.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-mergeDebugResources-48:\\layout\\fragment_home.xml",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\fragment_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-mergeDebugResources-48:\\layout\\fragment_memory.xml",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\fragment_memory.xml"
+    },
+    {
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-mergeDebugResources-48:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\activity_main.xml"
     }
 ]

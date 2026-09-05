@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.darrenai.jarvis.SignalBusTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-05T18:26:14" hostname="XL442" time="0.011">
+<testsuite name="com.darrenai.jarvis.SignalBusTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-05T18:53:40" hostname="XL442" time="0.034">
   <properties/>
-  <testcase name="all four states accepted" classname="com.darrenai.jarvis.SignalBusTest" time="0.01"/>
-  <testcase name="snapshot has all bus keys" classname="com.darrenai.jarvis.SignalBusTest" time="0.0"/>
-  <testcase name="snapshot carries 64 samples" classname="com.darrenai.jarvis.SignalBusTest" time="0.0"/>
-  <testcase name="leaving speaking clears level" classname="com.darrenai.jarvis.SignalBusTest" time="0.001"/>
+  <testcase name="all four states accepted" classname="com.darrenai.jarvis.SignalBusTest" time="0.026"/>
+  <testcase name="snapshot has all bus keys" classname="com.darrenai.jarvis.SignalBusTest" time="0.001"/>
+  <testcase name="snapshot carries 64 samples" classname="com.darrenai.jarvis.SignalBusTest" time="0.001"/>
+  <testcase name="leaving speaking clears level" classname="com.darrenai.jarvis.SignalBusTest" time="0.0"/>
   <testcase name="unknown state falls back to idle" classname="com.darrenai.jarvis.SignalBusTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

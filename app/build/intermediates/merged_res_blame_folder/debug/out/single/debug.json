@@ -1,58 +1,62 @@
 [
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/layout_item_memory.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/item_memory.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\xml_preferences.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\xml\\preferences.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/layout_fragment_memory.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_memory.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/layout_fragment_home.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_home.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\layout_item_memory.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\item_memory.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/layout_activity_main.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/activity_main.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\navigation_nav_graph.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\navigation\\nav_graph.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/drawable_ic_launcher_foreground.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/drawable/ic_launcher_foreground.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\layout_fragment_chat.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\fragment_chat.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/navigation_nav_graph.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/navigation/nav_graph.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\layout_fragment_home.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\fragment_home.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/xml_preferences.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/xml/preferences.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\layout_fragment_talk.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\fragment_talk.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/layout_item_chat.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/item_chat.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\layout_activity_settings.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\activity_settings.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/layout_fragment_chat.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_chat.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\menu_bottom_nav_menu.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\menu\\bottom_nav_menu.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/menu_bottom_nav_menu.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/menu/bottom_nav_menu.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\mipmap-anydpi-v26\\ic_launcher.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/mipmap-anydpi-v26/ic_launcher_round.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\layout_fragment_memory.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\fragment_memory.xml"
     },
     {
         "merged": "com.darrenai.jarvis.app-merged_res-49:/layout_fragment_talk.xml.flat",
         "source": "com.darrenai.jarvis.app-main-51:/layout/fragment_talk.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\drawable\\ic_launcher_foreground.xml"
     },
     {
-        "merged": "com.darrenai.jarvis.app-merged_res-49:/layout_activity_settings.xml.flat",
-        "source": "com.darrenai.jarvis.app-main-51:/layout/activity_settings.xml"
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-merged_res-49:\\layout_item_chat.xml.flat",
+        "source": "C:\\Users\\USER\\.gradle\\daemon\\8.5\\com.darrenai.jarvis.app-main-51:\\layout\\item_chat.xml"
     }
 ]

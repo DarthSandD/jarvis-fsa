@@ -21,20 +21,29 @@ import com.darrenai.jarvis.R
 import com.darrenai.jarvis.SignalBus
 import com.darrenai.jarvis.VoiceEngine
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * Talk: backtalk-style hold-to-talk voice loop.
- * Hold the button and speak -> transcription -> agent turn ->
- * spoken reply as it completes.
+ * Talk: realtime voice loop.
+ *
+ * - Hold-to-talk (default): hold the button and speak.
+ * - Hands-free: keeps listening turn after turn, like an open mic.
+ * - Replies stream in (SSE) and speak sentence-by-sentence, so first
+ *   audio plays ~1-2s into generation instead of waiting.
+ * - Vault recall is injected into every turn, so it remembers.
  */
 class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
 
     private lateinit var engine: VoiceEngine
     private lateinit var vault: MemoryVault
     private val history = mutableListOf<Pair<String, String>>()
+    private var handsFree = false
+    private var streamJob: Job? = null
+    private var streamBuffer = StringBuilder()
 
     private val requestPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -73,6 +82,17 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
                 else -> false
             }
         }
+
+        val hf = view.findViewById<Button>(R.id.btn_handsfree)
+        hf?.setOnClickListener {
+            handsFree = !handsFree
+            hf.text = if (handsFree) "HANDS-FREE: ON" else "HANDS-FREE: OFF"
+            if (handsFree && hasMic()) {
+                engine.beginTurn(this)
+            } else {
+                engine.endTurn()
+            }
+        }
     }
 
     private fun hasMic(): Boolean {
@@ -106,6 +126,15 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
             .getBoolean("tts_enabled", true)
     }
 
+    private fun nextTurn() {
+        if (!isAdded) return
+        if (handsFree && hasMic() && !engine.isSpeaking()) {
+            engine.beginTurn(this)
+        } else {
+            setStateLabel("idle")
+        }
+    }
+
     // ---- TurnCallback ----
 
     override fun onTranscript(text: String) {
@@ -115,32 +144,62 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
         log("you: $text")
         vault.appendTurn("user", text)
         history.add("user" to text)
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val res = client().chat(history)
-            withContext(Dispatchers.Main) {
-                if (!isAdded) return@withContext
-                when (res) {
-                    is OmniClient.Result.Ok -> {
-                        history.add("assistant" to res.text)
-                        vault.appendTurn("jarvis", res.text)
-                        log("jarvis: ${res.text.take(120)}")
-                        setStateLabel("speaking")
-                        if (ttsOn()) {
-                            engine.speak(res.text) {
-                                if (isAdded) setStateLabel("idle")
-                            }
-                        } else {
-                            runCatching { SignalBus.setState(SignalBus.IDLE) }
-                            setStateLabel("idle")
+        val memory = vault.recall(text)
+
+        streamJob?.cancel()
+        streamBuffer = StringBuilder()
+        streamJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val full = StringBuilder()
+            client().chatStream(
+                messages = history.toList(),
+                systemExtra = memory,
+                onDelta = { piece ->
+                    val sentences: List<String>
+                    synchronized(streamBuffer) {
+                        streamBuffer.append(piece)
+                        val (done, rest) = OmniClient.splitSentences(streamBuffer.toString())
+                        streamBuffer = StringBuilder(rest)
+                        sentences = done
+                    }
+                    full.append(piece)
+                    if (ttsOn()) {
+                        withContext(Dispatchers.Main) {
+                            sentences.forEach { engine.speakSentence(it) }
                         }
                     }
-                    is OmniClient.Result.Err -> {
+                },
+                onDone = { text ->
+                    full.clear().append(text)
+                    history.add("assistant" to text)
+                    vault.appendTurn("jarvis", text)
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded) return@withContext
+                        log("jarvis: ${text.take(120)}")
+                        setStateLabel("speaking")
+                        val (_, tail) = synchronized(streamBuffer) {
+                            OmniClient.splitSentences(streamBuffer.toString())
+                        }
+                        if (ttsOn()) {
+                            engine.finishStream(tail) { nextTurn() }
+                        } else {
+                            runCatching { SignalBus.setState(SignalBus.IDLE) }
+                            nextTurn()
+                        }
+                    }
+                },
+                onError = { err ->
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded) return@withContext
                         runCatching { SignalBus.setState(SignalBus.IDLE) }
                         setStateLabel("idle")
-                        log("error: ${res.message.take(120)}")
+                        log("error: ${err.take(120)}")
+                        if (handsFree) {
+                            // Brief pause, then keep the mic open.
+                            view?.postDelayed({ nextTurn() }, 1500)
+                        }
                     }
                 }
-            }
+            )
         }
     }
 
@@ -148,6 +207,9 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
         if (!isAdded) return
         setStateLabel("idle")
         log(error)
+        if (handsFree && isAdded) {
+            view?.postDelayed({ nextTurn() }, 1500)
+        }
     }
 
     override fun onResume() {
@@ -157,6 +219,9 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        handsFree = false
+        streamJob?.cancel()
         engine.endTurn()
+        engine.interrupt()
     }
 }

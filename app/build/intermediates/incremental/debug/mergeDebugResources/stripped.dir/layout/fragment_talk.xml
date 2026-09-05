@@ -37,6 +37,17 @@
         android:textSize="22sp"
         android:fontFamily="monospace" />
 
+    <Button
+        android:id="@+id/btn_handsfree"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/fsa_surface"
+        android:text="HANDS-FREE: OFF"
+        android:textColor="@color/fsa_green"
+        android:textSize="12sp"
+        android:fontFamily="monospace" />
+
     <TextView
         android:id="@+id/txt_talk_log"
         android:layout_width="match_parent"
