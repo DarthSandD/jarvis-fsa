@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.darrenai.jarvis.JarvisRouter
 import com.darrenai.jarvis.MemoryVault
 import com.darrenai.jarvis.OmniClient
 import com.darrenai.jarvis.R
@@ -121,6 +122,18 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
         )
     }
 
+    private fun router(): JarvisRouter {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val ep = prefs.getString("endpoint", OmniClient.DEFAULT_ENDPOINT)
+            ?: OmniClient.DEFAULT_ENDPOINT
+        // Settings stores the full chat URL; the router wants the base.
+        val base = ep.replace("/v1/chat/completions", "").ifBlank { JarvisRouter.DEFAULT_PRIMARY }
+        return JarvisRouter(
+            primaryBaseUrl = base,
+            apiKey = prefs.getString("api_key", "") ?: ""
+        )
+    }
+
     private fun ttsOn(): Boolean {
         return PreferenceManager.getDefaultSharedPreferences(requireContext())
             .getBoolean("tts_enabled", true)
@@ -150,9 +163,11 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
         streamBuffer = StringBuilder()
         streamJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val full = StringBuilder()
-            client().chatStream(
+            var via = ""
+            router().chatStream(
                 messages = history.toList(),
                 systemExtra = memory,
+                onBackend = { via = it },
                 onDelta = { piece ->
                     val sentences: List<String>
                     synchronized(streamBuffer) {
@@ -174,7 +189,7 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
                     vault.appendTurn("jarvis", text)
                     withContext(Dispatchers.Main) {
                         if (!isAdded) return@withContext
-                        log("jarvis: ${text.take(120)}")
+                        log("jarvis [$via]: ${text.take(120)}")
                         setStateLabel("speaking")
                         val (_, tail) = synchronized(streamBuffer) {
                             OmniClient.splitSentences(streamBuffer.toString())

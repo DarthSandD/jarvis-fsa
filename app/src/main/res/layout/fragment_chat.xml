@@ -5,6 +5,18 @@
     android:orientation="vertical"
     android:background="@color/fsa_bg">
 
+    <TextView
+        android:id="@+id/txt_chat_model"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="6dp"
+        android:text="darren-1212 · OmniRoute"
+        android:textColor="@color/fsa_dim"
+        android:textSize="11sp"
+        android:fontFamily="monospace" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_chat"
         android:layout_width="match_parent"

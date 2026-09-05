@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.darrenai.jarvis.JarvisRouter
 import com.darrenai.jarvis.OmniClient
 import com.darrenai.jarvis.R
 import kotlinx.coroutines.Dispatchers
@@ -40,23 +41,29 @@ class HomeFragment : Fragment() {
 
         val status = view.findViewById<TextView>(R.id.txt_home_status)
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val t0 = System.currentTimeMillis()
-            val client = client()
-            val err = try {
-                client.healthCheck()
-            } catch (e: Exception) {
-                e.message ?: "failed"
-            }
-            val ms = System.currentTimeMillis() - t0
+            val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+            val ep = prefs.getString("endpoint", OmniClient.DEFAULT_ENDPOINT)
+                ?: OmniClient.DEFAULT_ENDPOINT
+            val base = ep.replace("/v1/chat/completions", "")
+                .ifBlank { JarvisRouter.DEFAULT_PRIMARY }
+            val router = JarvisRouter(
+                primaryBaseUrl = base,
+                apiKey = prefs.getString("api_key", "") ?: ""
+            )
+            val results = router.probe()
             withContext(Dispatchers.Main) {
                 if (!isAdded) return@withContext
-                if (err == null) {
-                    status?.text = "● online · ${ms}ms"
-                    status?.setTextColor(resources.getColor(R.color.fsa_green, null))
-                } else {
-                    status?.text = "● offline — check Wi-Fi / Settings"
-                    status?.setTextColor(resources.getColor(R.color.fsa_amber, null))
+                val online = results.count { it.second == null }
+                val detail = results.joinToString(" · ") { (name, err) ->
+                    if (err == null) "$name OK" else "$name down"
                 }
+                status?.text = if (online > 0) "● $online/3 backends · $detail"
+                else "● offline — check Wi-Fi / Settings"
+                status?.setTextColor(
+                    resources.getColor(
+                        if (online > 0) R.color.fsa_green else R.color.fsa_amber, null
+                    )
+                )
             }
         }
     }

@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.darrenai.jarvis.JarvisRouter
 import com.darrenai.jarvis.MemoryVault
 import com.darrenai.jarvis.OmniClient
 import com.darrenai.jarvis.R
@@ -81,9 +82,16 @@ class ChatFragment : Fragment() {
         val shown = StringBuilder()
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            client().chatStream(
+            router().chatStream(
                 messages = history,
                 systemExtra = memory,
+                onBackend = { via ->
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded) return@withContext
+                        view.findViewById<TextView>(R.id.txt_chat_model)?.text =
+                            "darren-1212 · $via"
+                    }
+                },
                 onDelta = { piece ->
                     withContext(Dispatchers.Main) {
                         if (!isAdded) return@withContext
@@ -135,6 +143,17 @@ class ChatFragment : Fragment() {
         return OmniClient(
             endpoint = prefs.getString("endpoint", OmniClient.DEFAULT_ENDPOINT)
                 ?: OmniClient.DEFAULT_ENDPOINT,
+            apiKey = prefs.getString("api_key", "") ?: ""
+        )
+    }
+
+    private fun router(): JarvisRouter {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val ep = prefs.getString("endpoint", OmniClient.DEFAULT_ENDPOINT)
+            ?: OmniClient.DEFAULT_ENDPOINT
+        val base = ep.replace("/v1/chat/completions", "").ifBlank { JarvisRouter.DEFAULT_PRIMARY }
+        return JarvisRouter(
+            primaryBaseUrl = base,
             apiKey = prefs.getString("api_key", "") ?: ""
         )
     }
