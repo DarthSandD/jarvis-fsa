@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.darrenai.jarvis.DeviceActions
 import com.darrenai.jarvis.JarvisRouter
+import com.darrenai.jarvis.WebTools
 import com.darrenai.jarvis.MemoryVault
 import com.darrenai.jarvis.OmniClient
 import com.darrenai.jarvis.R
@@ -88,7 +89,8 @@ class ChatFragment : Fragment() {
         }
 
         val history = messages.map { (if (it.isUser) "user" else "assistant") to it.text }
-        val memory = listOf(vault.recall(text), DeviceActions.snapshot(requireContext()))
+        val web = WebTools.parseIntent(text)?.let { WebTools.fetch(it) }
+        val memory = listOf(vault.recall(text), DeviceActions.snapshot(requireContext()), web ?: "")
             .filter { it.isNotBlank() }.joinToString("\n")
         // Placeholder bubble fills in live as the stream arrives.
         messages.add(Msg("…", false))

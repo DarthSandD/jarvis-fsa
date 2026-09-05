@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.darrenai.jarvis.DeviceActions
 import com.darrenai.jarvis.JarvisRouter
+import com.darrenai.jarvis.WebTools
 import com.darrenai.jarvis.MemoryVault
 import com.darrenai.jarvis.OmniClient
 import com.darrenai.jarvis.R
@@ -173,8 +174,12 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
 
         history.add("user" to text)
         val device = DeviceActions.snapshot(requireContext())
-        val memory = listOf(vault.recall(text), device).filter { it.isNotBlank() }
-            .joinToString("\n")
+        // Live internet: fetch first, LLM speaks the fresh facts.
+        val webIntent = WebTools.parseIntent(text)
+        val web = webIntent?.let { WebTools.fetch(it) }
+        val webUsed = !web.isNullOrBlank()
+        val memory = listOf(vault.recall(text), device, web ?: "")
+            .filter { it.isNotBlank() }.joinToString("\n")
 
         streamJob?.cancel()
         streamBuffer = StringBuilder()
@@ -206,7 +211,8 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
                     vault.appendTurn("jarvis", text)
                     withContext(Dispatchers.Main) {
                         if (!isAdded) return@withContext
-                        log("jarvis [$via]: ${text.take(120)}")
+                        val tag = if (webUsed) "$via + live data" else via
+                        log("jarvis [$tag]: ${text.take(120)}")
                         setStateLabel("speaking")
                         val (_, tail) = synchronized(streamBuffer) {
                             OmniClient.splitSentences(streamBuffer.toString())
