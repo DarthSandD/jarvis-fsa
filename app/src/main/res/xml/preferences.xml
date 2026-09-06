@@ -24,6 +24,18 @@
             app:summary="Paste Nous API key: enables free frontier fallback when off LAN"
             app:defaultValue=""
             app:useSimpleSummaryProvider="false" />
+        <EditTextPreference
+            app:key="bridge_url"
+            app:title="Termux bridge URL"
+            app:summary="Localhost bridge on the S23: shell hands for agent mode"
+            app:defaultValue="http://127.0.0.1:8087"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="bridge_token"
+            app:title="Termux bridge token"
+            app:summary="Must match JARVIS_BRIDGE_TOKEN on the Termux side"
+            app:defaultValue=""
+            app:useSimpleSummaryProvider="false" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Voice">

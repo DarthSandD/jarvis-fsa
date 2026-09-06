@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.darrenai.jarvis.DeviceActions
 import com.darrenai.jarvis.JarvisRouter
+import com.darrenai.jarvis.TermuxBridge
 import com.darrenai.jarvis.MemoryVault
 import com.darrenai.jarvis.OmniClient
 import com.darrenai.jarvis.VoiceEngine
@@ -54,14 +55,20 @@ class HomeFragment : Fragment() {
                 apiKey = prefs.getString("api_key", "") ?: "",
                 nousKey = prefs.getString("nous_key", "") ?: ""
             )
-            val results = router.probe()
+            val results = router.probe().toMutableList()
+            val bridgeOk = TermuxBridge(
+                baseUrl = prefs.getString("bridge_url", TermuxBridge.DEFAULT_URL)
+                    ?: TermuxBridge.DEFAULT_URL,
+                token = prefs.getString("bridge_token", "") ?: ""
+            ).health()
+            results.add("Termux" to if (bridgeOk) null else "down")
             withContext(Dispatchers.Main) {
                 if (!isAdded) return@withContext
                 val online = results.count { it.second == null }
                 val detail = results.joinToString(" · ") { (name, err) ->
                     if (err == null) "$name OK" else "$name down"
                 }
-                status?.text = if (online > 0) "● $online/3 backends · $detail"
+                status?.text = if (online > 0) "● $online/${results.size} backends · $detail"
                 else "● offline — check Wi-Fi / Settings"
                 status?.setTextColor(
                     resources.getColor(

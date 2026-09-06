@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.darrenai.jarvis.DeviceActions
 import com.darrenai.jarvis.AgentLoop
+import com.darrenai.jarvis.ApprovalGate
+import com.darrenai.jarvis.TermuxBridge
 import com.darrenai.jarvis.JarvisRouter
 import com.darrenai.jarvis.WebTools
 import com.darrenai.jarvis.MemoryVault
@@ -148,6 +150,38 @@ class ChatFragment : Fragment() {
         }
     }
 
+    /** Approval dialog: suspends until Darren taps Allow or Deny. Dismiss = deny. */
+    private suspend fun askApproval(cmd: String): Boolean =
+        kotlinx.coroutines.suspendCancellableCoroutine { cont ->
+            val act = activity
+            if (act == null || !isAdded) {
+                cont.resume(false) {}
+                return@suspendCancellableCoroutine
+            }
+            act.runOnUiThread {
+                runCatching {
+                    android.app.AlertDialog.Builder(act)
+                        .setTitle("Agent requests shell")
+                        .setMessage(cmd.take(500))
+                        .setCancelable(false)
+                        .setPositiveButton("Allow once") { d, _ ->
+                            d.dismiss()
+                            if (cont.isActive) cont.resume(true) {}
+                        }
+                        .setNegativeButton("Deny") { d, _ ->
+                            d.dismiss()
+                            if (cont.isActive) cont.resume(false) {}
+                        }
+                        .setOnCancelListener {
+                            if (cont.isActive) cont.resume(false) {}
+                        }
+                        .show()
+                }.getOrElse {
+                    if (cont.isActive) cont.resume(false) {}
+                }
+            }
+        }
+
     /** Agentic run: ReAct loop with on-device tools, progress shown live. */
     private fun runAgent(view: View, goal: String) {
         messages.add(Msg("◌ agent working: $goal", false))
@@ -156,6 +190,13 @@ class ChatFragment : Fragment() {
         scroll(view)
 
         val ctx = requireContext()
+        val prefs = PreferenceManager.getDefaultSharedPreferences(ctx)
+        val bridge = TermuxBridge(
+            baseUrl = prefs.getString("bridge_url", TermuxBridge.DEFAULT_URL)
+                ?: TermuxBridge.DEFAULT_URL,
+            token = prefs.getString("bridge_token", "") ?: ""
+        )
+        val gate = ApprovalGate()
         val tools: Map<String, suspend (String) -> String> = mapOf(
             "device_state" to { DeviceActions.snapshot(ctx).ifBlank { "no device snapshot" } },
             "device_act" to { cmd ->
@@ -175,6 +216,19 @@ class ChatFragment : Fragment() {
             },
             "web" to { q ->
                 WebTools.parseIntent(q)?.let { WebTools.fetch(it) } ?: "no web intent detected"
+            },
+            "shell" to { cmd ->
+                // Approval gate: dialog on Main, deny-by-default, then bridge exec.
+                val allowed = gate.request(cmd) { askApproval(it) }
+                if (!allowed) {
+                    "denied by Darren — do not retry shell, finish with phone-safe tools"
+                } else {
+                    val r = bridge.exec(cmd)
+                    when {
+                        !r.ok && r.error.isNotBlank() -> "bridge failed: ${r.error}"
+                        else -> "exit=${r.code}\n${r.stdout}\n${r.stderr}".trim().take(800)
+                    }
+                }
             }
         )
 
