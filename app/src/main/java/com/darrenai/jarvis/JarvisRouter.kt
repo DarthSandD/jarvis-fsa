@@ -22,6 +22,7 @@ class JarvisRouter(
     private val primaryBaseUrl: String = DEFAULT_PRIMARY,
     private val primaryModel: String = DEFAULT_MODEL,
     private val apiKey: String = "",
+    private val nousKey: String = "",
     private val transport: StreamTransport = HttpStreamTransport()
 ) {
 
@@ -55,7 +56,7 @@ class JarvisRouter(
 
     fun backends(): List<Backend> = listOf(
         Backend("OmniRoute", primaryBaseUrl, primaryModel, apiKey),
-        Backend("Nous", NOUS_BASE, NOUS_MODEL),
+        Backend("Nous", NOUS_BASE, NOUS_MODEL, nousKey),
         Backend("On-device", LOCAL_BASE, LOCAL_MODEL)
     )
 

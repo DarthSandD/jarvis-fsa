@@ -51,7 +51,8 @@ class HomeFragment : Fragment() {
                 .ifBlank { JarvisRouter.DEFAULT_PRIMARY }
             val router = JarvisRouter(
                 primaryBaseUrl = base,
-                apiKey = prefs.getString("api_key", "") ?: ""
+                apiKey = prefs.getString("api_key", "") ?: "",
+                nousKey = prefs.getString("nous_key", "") ?: ""
             )
             val results = router.probe()
             withContext(Dispatchers.Main) {

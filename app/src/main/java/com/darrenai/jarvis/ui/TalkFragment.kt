@@ -132,7 +132,8 @@ class TalkFragment : Fragment(), VoiceEngine.TurnCallback {
         val base = ep.replace("/v1/chat/completions", "").ifBlank { JarvisRouter.DEFAULT_PRIMARY }
         return JarvisRouter(
             primaryBaseUrl = base,
-            apiKey = prefs.getString("api_key", "") ?: ""
+            apiKey = prefs.getString("api_key", "") ?: "",
+            nousKey = prefs.getString("nous_key", "") ?: ""
         )
     }
 

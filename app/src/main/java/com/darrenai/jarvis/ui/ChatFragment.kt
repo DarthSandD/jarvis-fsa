@@ -172,7 +172,8 @@ class ChatFragment : Fragment() {
         val base = ep.replace("/v1/chat/completions", "").ifBlank { JarvisRouter.DEFAULT_PRIMARY }
         return JarvisRouter(
             primaryBaseUrl = base,
-            apiKey = prefs.getString("api_key", "") ?: ""
+            apiKey = prefs.getString("api_key", "") ?: "",
+            nousKey = prefs.getString("nous_key", "") ?: ""
         )
     }
 
@@ -201,8 +202,8 @@ class ChatFragment : Fragment() {
             h.msg.setTextColor(
                 if (m.isUser) 0xFF020705.toInt() else 0xFFE8F0F2.toInt()
             )
-            h.msg.setBackgroundColor(
-                if (m.isUser) 0xFF3DDC84.toInt() else 0xFF071711.toInt()
+            h.msg.setBackgroundResource(
+                if (m.isUser) R.drawable.bubble_user else R.drawable.bubble_jarvis
             )
             h.msg.textAlignment =
                 if (m.isUser) View.TEXT_ALIGNMENT_TEXT_END else View.TEXT_ALIGNMENT_TEXT_START

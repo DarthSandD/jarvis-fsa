@@ -18,6 +18,12 @@
             app:title="API key (if required)"
             app:defaultValue=""
             app:useSimpleSummaryProvider="false" />
+        <EditTextPreference
+            app:key="nous_key"
+            app:title="Nous free key (away-from-home brain)"
+            app:summary="Paste Nous API key: enables free frontier fallback when off LAN"
+            app:defaultValue=""
+            app:useSimpleSummaryProvider="false" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Voice">

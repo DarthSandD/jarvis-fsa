@@ -87,4 +87,25 @@ class DeviceActionsTest {
         assertNull(DeviceActions.parseCommand("explain quantum entanglement"))
         assertNull(DeviceActions.parseCommand("remind me"))
     }
+
+    @Test fun help() {
+        assertEquals(
+            DeviceActions.LocalIntent.Help,
+            DeviceActions.parseCommand("help")
+        )
+    }
+
+    @Test fun openFace() {
+        assertEquals(
+            DeviceActions.LocalIntent.OpenFace,
+            DeviceActions.parseCommand("open the face")
+        )
+    }
+
+    @Test fun memoryStatus() {
+        assertEquals(
+            DeviceActions.LocalIntent.MemoryStatus,
+            DeviceActions.parseCommand("what do you remember?")
+        )
+    }
 }

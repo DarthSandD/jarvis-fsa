@@ -40,6 +40,12 @@ object DeviceActions {
         }
         if (Regex("open settings|phone settings").containsMatchIn(t))
             return LocalIntent.OpenSettings
+        if (Regex("^(help|what can you do|commands|help me)$").containsMatchIn(t))
+            return LocalIntent.Help
+        if (Regex("open (the )?face|show (the )?face|arc reactor|face mode").containsMatchIn(t))
+            return LocalIntent.OpenFace
+        if (Regex("what do you remember|memory status|how many memor|list memor|recall everything").containsMatchIn(t))
+            return LocalIntent.MemoryStatus
         return null
     }
 
@@ -50,6 +56,9 @@ object DeviceActions {
         object Date : LocalIntent()
         data class Reminder(val text: String) : LocalIntent()
         object OpenSettings : LocalIntent()
+        object Help : LocalIntent()
+        object OpenFace : LocalIntent()
+        object MemoryStatus : LocalIntent()
     }
 
     /** Execute a parsed intent against the device. */
@@ -93,6 +102,24 @@ object DeviceActions {
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 }
                 "Opening system settings, sir."
+            }
+            LocalIntent.Help -> {
+                "Offline, sir: flashlight, battery, time, date, reminders, face mode, memory status, settings. " +
+                    "Online: chat, voice, weather, forex, crypto, wiki — ask anything."
+            }
+            LocalIntent.OpenFace -> {
+                runCatching {
+                    ctx.startActivity(
+                        Intent(ctx, com.darrenai.jarvis.ui.FaceActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+                "Opening the face, sir."
+            }
+            LocalIntent.MemoryStatus -> {
+                val n = runCatching { vault?.listDocs()?.size ?: 0 }.getOrDefault(0)
+                if (n <= 0) "The vault is empty so far, sir. Say 'remember this' and I will keep it."
+                else "I hold $n notes in the vault, sir. Ask to search them any time."
             }
         }
     }
