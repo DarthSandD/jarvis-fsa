@@ -13,6 +13,7 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.darrenai.jarvis.DeviceActions
+import com.darrenai.jarvis.AgentLoop
 import com.darrenai.jarvis.JarvisRouter
 import com.darrenai.jarvis.WebTools
 import com.darrenai.jarvis.MemoryVault
@@ -73,6 +74,12 @@ class ChatFragment : Fragment() {
         updateEmpty(view)
         scroll(view)
         vault.appendTurn("user", text)
+
+        // Agentic loop: "agent: <goal>" plans + acts across tools, self-verifies.
+        if (text.startsWith(AgentLoop.PREFIX, ignoreCase = true)) {
+            runAgent(view, text.substringAfter(":").trim().ifBlank { text })
+            return
+        }
 
         // Local device commands bypass the LLM — instant action.
         val local = DeviceActions.parseCommand(text)
@@ -138,6 +145,83 @@ class ChatFragment : Fragment() {
                     }
                 }
             )
+        }
+    }
+
+    /** Agentic run: ReAct loop with on-device tools, progress shown live. */
+    private fun runAgent(view: View, goal: String) {
+        messages.add(Msg("◌ agent working: $goal", false))
+        val aiIdx = messages.size - 1
+        runCatching { adapter.notifyItemInserted(aiIdx) }
+        scroll(view)
+
+        val ctx = requireContext()
+        val tools: Map<String, suspend (String) -> String> = mapOf(
+            "device_state" to { DeviceActions.snapshot(ctx).ifBlank { "no device snapshot" } },
+            "device_act" to { cmd ->
+                val intent = DeviceActions.parseCommand(cmd)
+                if (intent == null) "not a device command; try chat instead"
+                else DeviceActions.execute(ctx, intent, vault)
+            },
+            "memory_search" to { q ->
+                vault.search(q).take(3).joinToString("\n") { "- ${it.name}: ${it.preview}" }
+                    .ifBlank { "no matching memories" }
+            },
+            "memory_save" to { arg ->
+                val title = arg.substringBefore("|").trim().ifBlank { "agent-note" }.take(60)
+                val body = arg.substringAfter("|", arg).trim()
+                val ok = runCatching { vault.saveNote(title, body) }.getOrDefault(false)
+                if (ok) "saved under '$title'" else "save failed"
+            },
+            "web" to { q ->
+                WebTools.parseIntent(q)?.let { WebTools.fetch(it) } ?: "no web intent detected"
+            }
+        )
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val loop = AgentLoop(router(), tools)
+            try {
+                val answer = loop.run(
+                    goal = goal,
+                    systemExtra = listOf(
+                        vault.recall(goal),
+                        DeviceActions.snapshot(ctx)
+                    ).filter { it.isNotBlank() }.joinToString("\n"),
+                    onStatus = { s ->
+                        withContext(Dispatchers.Main) {
+                            if (!isAdded) return@withContext
+                            messages[aiIdx] = Msg("◌ agent $s", false, messages[aiIdx].ts)
+                            runCatching { adapter.notifyItemChanged(aiIdx) }
+                        }
+                    },
+                    onStep = { st ->
+                        withContext(Dispatchers.Main) {
+                            if (!isAdded) return@withContext
+                            messages[aiIdx] = Msg(
+                                "◌ agent ${st.action}: ${st.arg.take(80)}",
+                                false, messages[aiIdx].ts
+                            )
+                            runCatching { adapter.notifyItemChanged(aiIdx) }
+                        }
+                    }
+                )
+                withContext(Dispatchers.Main) {
+                    if (!isAdded) return@withContext
+                    messages[aiIdx] = Msg(answer, false, messages[aiIdx].ts)
+                    runCatching { adapter.notifyItemChanged(aiIdx) }
+                    vault.appendTurn("jarvis", answer)
+                    view.findViewById<TextView>(R.id.txt_chat_model)?.text = "agent · loop"
+                    if (ttsOn()) VoiceEngine.get(ctx).speak(answer)
+                    scroll(view)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    if (!isAdded) return@withContext
+                    messages[aiIdx] = Msg("⚠️ agent failed: ${e.message}", false, messages[aiIdx].ts)
+                    runCatching { adapter.notifyItemChanged(aiIdx) }
+                    scroll(view)
+                }
+            }
         }
     }
 

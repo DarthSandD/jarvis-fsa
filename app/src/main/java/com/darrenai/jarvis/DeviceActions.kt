@@ -105,7 +105,8 @@ object DeviceActions {
             }
             LocalIntent.Help -> {
                 "Offline, sir: flashlight, battery, time, date, reminders, face mode, memory status, settings. " +
-                    "Online: chat, voice, weather, forex, crypto, wiki — ask anything."
+                    "Online: chat, voice, weather, forex, crypto, wiki. " +
+                    "For multi-step jobs, start with 'agent:' — I plan, act across tools, and verify."
             }
             LocalIntent.OpenFace -> {
                 runCatching {
